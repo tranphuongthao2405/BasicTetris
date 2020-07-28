@@ -136,7 +136,16 @@ document.addEventListener("DOMContentLoaded", () => {
     draw();
   }
 
-  function rotate() {}
+  function rotate() {
+      undraw();
+      currentRotation++;
+      // if the current rotation is the last - 4, go back to first rotation
+      if(currentRotation === current.length) {
+          currentRotation = 0;
+      }
+      current = theTetrominoes[random][currentRotation];
+      draw();
+  }
 
   function moveRight() {
     undraw();
