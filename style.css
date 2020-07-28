@@ -1,0 +1,20 @@
+.grid {
+  width: 200px;
+  height: 400px;
+  display: flex;
+  flex-wrap: wrap;
+  background-color: yellow;
+}
+
+/*
+every div element in grid div is a square in 10 x 20 game table
+start counting from 0 to 199
+*/
+.grid div {
+  height: 20px;
+  width: 20px;
+}
+
+.tetromino {
+  background-color: blue;
+}
