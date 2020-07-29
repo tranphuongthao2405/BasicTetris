@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const startButton = document.querySelector("#start-button");
   const width = 10;
   let timerId;
+  let nextRandom = 0;
 
   const lTetromino = [
     [1, width + 1, width * 2 + 1, 2],
@@ -70,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // make the tetromino move down every second
-  timerId = setInterval(moveDown, 1000);
+  // timerId = setInterval(moveDown, 1000);
 
   // assign function to choose key to press
   function control(e) {
@@ -91,12 +92,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function moveDown() {
     undraw();
     currentPosition += width;
-    console.log(currentPosition);
+    // except for first tetromino, every tetromino appearing after the first is decided by next random - up-next tetromino in mini-grid
     draw();
     freeze();
   }
 
-  // function to stop tetris go down over the bottom border
+  // function to stop tetromino going down over the bottom border
   function freeze() {
     if (
       current.some((index) =>
@@ -107,11 +108,14 @@ document.addEventListener("DOMContentLoaded", () => {
         squares[currentPosition + index].classList.add("taken")
       );
 
-      //start a new tetromino falling
-      random = Math.floor(Math.random() * theTetrominoes.length);
+      // start a new tetromino falling
+      random = nextRandom; // display next up tetromino appearing in mini-grid after the first tetromino
+      nextRandom = Math.floor(Math.random() * theTetrominoes.length);
       current = theTetrominoes[random][currentRotation];
       currentPosition = 4;
       draw();
+      // when a new tetromino is draw is the moment to show up next tetromino
+      displayShape();
     }
   }
 
@@ -137,14 +141,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function rotate() {
-      undraw();
-      currentRotation++;
-      // if the current rotation is the last - 4, go back to first rotation
-      if(currentRotation === current.length) {
-          currentRotation = 0;
-      }
-      current = theTetrominoes[random][currentRotation];
-      draw();
+    undraw();
+    currentRotation++;
+    // if the current rotation is the last, meaning 4, go back to first rotation
+    if (currentRotation === current.length) {
+      currentRotation = 0;
+    }
+    current = theTetrominoes[random][currentRotation];
+    draw();
   }
 
   function moveRight() {
@@ -167,4 +171,42 @@ document.addEventListener("DOMContentLoaded", () => {
     draw();
   }
 
+  // show up next tetromino in mini-grid
+  const displaySquares = document.querySelectorAll(".mini-grid div");
+  const displayWidth = 4; // because max rows is 4 with iTetromino
+  let displayIndex = 0;
+
+  // tetromino without rotation - original rotation - first rotation in every kind of tetromino
+  const upNextTetrominoes = [
+    [1, displayWidth + 1, displayWidth * 2 + 1, 2], // lTetromino
+    [0, displayWidth, displayWidth + 1, displayWidth * 2 + 1], // zTetromino
+    [1, displayWidth, displayWidth + 1, displayWidth + 2], // tTetromino
+    [0, 1, displayWidth, displayWidth + 1], // oTetromino
+    [1, displayWidth + 1, displayWidth * 2 + 1, displayWidth * 3 + 1], // iTetromino
+  ];
+
+  // display the shape of next falling down tetromino in the mini-grid
+  function displayShape() {
+    // remove/delete old tetromino to show up next tetromino
+    displaySquares.forEach((square) => {
+      square.classList.remove("tetromino");
+    });
+
+    // display next tetromino in mini-grid
+    upNextTetrominoes[nextRandom].forEach((index) => {
+      displaySquares[displayIndex + index].classList.add("tetromino");
+    });
+  }
+
+  // process start/pause button
+  startButton.addEventListener("click", () => {
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    } else {
+      draw();
+      nextRandom = Math.floor(Math.random() * theTetrominoes.length);
+      timerId = setInterval(moveDown, 1000);
+    }
+  });
 });
