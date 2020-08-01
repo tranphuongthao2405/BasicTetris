@@ -6,6 +6,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const width = 10;
   let timerId;
   let nextRandom = 0;
+  let score = 0;
+
+  const colors = [
+    'orange',
+    'red',
+    'purple',
+    'green',
+    'blue'
+  ]
 
   const lTetromino = [
     [1, width + 1, width * 2 + 1, 2],
@@ -61,12 +70,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function draw() {
     current.forEach((index) => {
       squares[currentPosition + index].classList.add("tetromino");
+      squares[currentPosition + index].style.backgroundColor = colors[random];
     });
   }
 
   function undraw() {
     current.forEach((index) => {
       squares[currentPosition + index].classList.remove("tetromino");
+      squares[currentPosition + index].style.backgroundColor = '';
     });
   }
 
@@ -116,6 +127,8 @@ document.addEventListener("DOMContentLoaded", () => {
       draw();
       // when a new tetromino is draw is the moment to show up next tetromino
       displayShape();
+      addScore();
+      gameOver();
     }
   }
 
@@ -140,6 +153,23 @@ document.addEventListener("DOMContentLoaded", () => {
     draw();
   }
 
+  function checkRotatedPosition(P) {
+    P = P || currentPosition; //get current position.  Then, check if the piece is near the left side.
+    if ((P + 1) % width < 4) {
+      //add 1 because the position index can be 1 less than where the piece is (with how they are indexed).
+      if (isAtRight()) {
+        //use actual position to check if it's flipped over to right side
+        currentPosition += 1; //if so, add one to wrap it back around
+        checkRotatedPosition(P); //check again.  Pass position from start, since long block might need to move more.
+      }
+    } else if (P % width > 5) {
+      if (isAtLeft()) {
+        currentPosition -= 1;
+        checkRotatedPosition(P);
+      }
+    }
+  }
+
   function rotate() {
     undraw();
     currentRotation++;
@@ -148,6 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
       currentRotation = 0;
     }
     current = theTetrominoes[random][currentRotation];
+    checkRotatedPosition();
     draw();
   }
 
@@ -190,11 +221,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // remove/delete old tetromino to show up next tetromino
     displaySquares.forEach((square) => {
       square.classList.remove("tetromino");
+      square.style.backgroundColor = '';
     });
 
     // display next tetromino in mini-grid
     upNextTetrominoes[nextRandom].forEach((index) => {
       displaySquares[displayIndex + index].classList.add("tetromino");
+      displaySquares[displayIndex + index].style.backgroundColor = colors[nextRandom];
     });
   }
 
@@ -209,4 +242,47 @@ document.addEventListener("DOMContentLoaded", () => {
       timerId = setInterval(moveDown, 1000);
     }
   });
+
+  // add scrore
+  function addScore() {
+    for (let i = 0; i < 199; i += width) {
+      const row = [
+        i,
+        i + 1,
+        i + 2,
+        i + 3,
+        i + 4,
+        i + 5,
+        i + 6,
+        i + 7,
+        i + 8,
+        i + 9,
+      ];
+
+      if (row.every((index) => squares[index].classList.contains("taken"))) {
+        score += 10;
+        scoreDisplay.innerHTML = score;
+        row.forEach((index) => {
+          squares[index].classList.remove("taken");
+          squares[index].classList.remove("tetromino");
+          squares[index].style.backgroundColor = '';
+        });
+
+        const squaresRemoved = squares.splice(i, width);
+        squares = squaresRemoved.concat(squares);
+        squares.forEach((cell) => grid.appendChild(cell));
+      }
+    }
+  }
+
+  function gameOver() {
+    if (
+      current.some((index) =>
+        squares[currentPosition + index].classList.contains("taken")
+      )
+    ) {
+      scoreDisplay.innerHTML = "Game over";
+      clearInterval(timerId);
+    }
+  }
 });
